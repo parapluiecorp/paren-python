@@ -3,7 +3,6 @@ THIS IS PARENTHESES PYTHON:
 
 TODO:
 ====
-
 Tokenizer / Keywords
 ====================
 
@@ -15,17 +14,20 @@ Introduce ``has`` as a **keyword**.
 Files
 -----
 
-+----------------------+--------------------------------------------------------------+
-| File                 | What to do                                                   |
-+======================+==============================================================+
-| Parser/tokenizer.c   | Add ``"has"`` to the keyword table so it produces a ``HAS`` token. |
-+----------------------+--------------------------------------------------------------+
-| Include/token.h      | Define a new token type, e.g., ``HAS``.                     |
-+----------------------+--------------------------------------------------------------+
-| Lib/token.py         | Mirror the token addition so pure-Python tools recognize ``has``. |
-+----------------------+--------------------------------------------------------------+
-| Grammar/Tokens       | Add ``"has"`` so the grammar recognizes it as a keyword.    |
-+----------------------+--------------------------------------------------------------+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 80
+
+   * - File
+     - What to do
+   * - Parser/tokenizer.c
+     - Add ``"has"`` to the keyword table so it produces a ``HAS`` token.
+   * - Include/token.h
+     - Define a new token type, e.g., ``HAS``.
+   * - Lib/token.py
+     - Mirror the token addition so pure-Python tools recognize ``has``.
+   * - Grammar/Tokens
+     - Add ``"has"`` so the grammar recognizes it as a keyword.
 
 Notes
 -----
@@ -43,17 +45,20 @@ Purpose
 * Allow parentheses around **any expression**
 * Define ``(NAME: TYPE has EXPR)`` as a statement
 
-File
-----
+Files
+-----
 
-+----------------------+------------------------------------------------------------------------------------------------+
-| File                 | Purpose                                                                                        |
-+======================+================================================================================================+
-| Grammar/python.gram  | Modify/extend rules for:                                                                       |
-|                      | - **Expression layer**: Add rule ``"(" expression ")"`` at the ``primary`` or equivalent top-of-expression level. |
-|                      | - **Statement layer**: Add rule ``"(" statement ")"`` recursively so **any statement** can be wrapped. |
-|                      | - **Binding statement**: Add rule ``(NAME ":" type_expr "has" expression)`` producing a statement (``AnnAssign``). |
-+----------------------+------------------------------------------------------------------------------------------------+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 80
+
+   * - File
+     - Purpose
+   * - Grammar/python.gram
+     - Modify/extend rules for:
+       - **Expression layer**: Add rule ``"(" expression ")"`` at the ``primary`` or equivalent top-of-expression level.
+       - **Statement layer**: Add rule ``"(" statement ")"`` recursively so **any statement** can be wrapped.
+       - **Binding statement**: Add rule ``(NAME ":" type_expr "has" expression)`` producing a statement (``AnnAssign``).
 
 Notes
 -----
@@ -73,14 +78,17 @@ Purpose
 Files
 -----
 
-+------------------------+------------------------------------------------------------------------------------------------------+
-| File                   | Purpose                                                                                              |
-+========================+======================================================================================================+
-| Parser/pegen/ast.c     | - Implement function to create ``AnnAssign`` from ``(NAME: TYPE has EXPR)``                           |
-|                        | - Ensure parenthesized expressions/statements return the inner AST node without creating a new wrapper |
-+------------------------+------------------------------------------------------------------------------------------------------+
-| Parser/pegen/pegen.c   | Mostly automatic; ensure grammar rules call AST builder functions properly                           |
-+------------------------+------------------------------------------------------------------------------------------------------+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 80
+
+   * - File
+     - Purpose
+   * - Parser/pegen/ast.c
+     - Implement function to create ``AnnAssign`` from ``(NAME: TYPE has EXPR)``.
+     - Ensure parenthesized expressions/statements return the inner AST node without creating a new wrapper.
+   * - Parser/pegen/pegen.c
+     - Mostly automatic; ensure grammar rules call AST builder functions properly.
 
 Notes
 -----
@@ -92,17 +100,25 @@ Notes
 Summary of Impacts on CPython Source Tree
 =========================================
 
-+----------------------+------------------------------------------------------------+----------------------------------------------------+
-| Subsystem            | Files                                                      | Purpose                                            |
-+======================+============================================================+====================================================+
-| Tokenizer / Keywords | Parser/tokenizer.c, Include/token.h, Lib/token.py, Grammar/Tokens | Add ``has`` keyword                                |
-+----------------------+------------------------------------------------------------+----------------------------------------------------+
-| Grammar              | Grammar/python.gram                                        | Add parenthesized expressions, parenthesized statements, ``(NAME: TYPE has EXPR)`` |
-+----------------------+------------------------------------------------------------+----------------------------------------------------+
-| AST Builder / Parser | Parser/pegen/ast.c, Parser/pegen/pegen.c                  | Map binding to ``AnnAssign``, unwrap parentheses for expressions/statements |
-+----------------------+------------------------------------------------------------+----------------------------------------------------+
-| NOT modified         | Python/compile.c, Python/symtable.c, ceval.c, Objects/*   | CPython runtime and compiler remain unchanged    |
-+----------------------+------------------------------------------------------------+----------------------------------------------------+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 60 20
+
+   * - Subsystem
+     - Files
+     - Purpose
+   * - Tokenizer / Keywords
+     - Parser/tokenizer.c, Include/token.h, Lib/token.py, Grammar/Tokens
+     - Add ``has`` keyword
+   * - Grammar
+     - Grammar/python.gram
+     - Add parenthesized expressions, parenthesized statements, ``(NAME: TYPE has EXPR)``
+   * - AST Builder / Parser
+     - Parser/pegen/ast.c, Parser/pegen/pegen.c
+     - Map binding to ``AnnAssign``, unwrap parentheses for expressions/statements
+   * - NOT modified
+     - Python/compile.c, Python/symtable.c, ceval.c, Objects/*
+     - CPython runtime and compiler remain unchanged
 
 Notes / Implementation Guidance
 ===============================
