@@ -1,5 +1,120 @@
-# THIS IS PARENTHESES PYTHON, FORKED AS OF:
+THIS IS PARENTHESES PYTHON:
+===========================
 
+TODO:
+====
+
+Tokenizer / Keywords
+====================
+
+Purpose
+-------
+
+Introduce ``has`` as a **keyword**.
+
+Files
+-----
+
++----------------------+--------------------------------------------------------------+
+| File                 | What to do                                                   |
++======================+==============================================================+
+| Parser/tokenizer.c   | Add ``"has"`` to the keyword table so it produces a ``HAS`` token. |
++----------------------+--------------------------------------------------------------+
+| Include/token.h      | Define a new token type, e.g., ``HAS``.                     |
++----------------------+--------------------------------------------------------------+
+| Lib/token.py         | Mirror the token addition so pure-Python tools recognize ``has``. |
++----------------------+--------------------------------------------------------------+
+| Grammar/Tokens       | Add ``"has"`` so the grammar recognizes it as a keyword.    |
++----------------------+--------------------------------------------------------------+
+
+Notes
+-----
+
+* This prevents using ``has`` as a variable name.
+* Only minimal change; no other keywords are affected.
+
+Grammar (PEG) – Parentheses & Binding Form
+==========================================
+
+Purpose
+-------
+
+* Allow parentheses around **any statement**
+* Allow parentheses around **any expression**
+* Define ``(NAME: TYPE has EXPR)`` as a statement
+
+File
+----
+
++----------------------+------------------------------------------------------------------------------------------------+
+| File                 | Purpose                                                                                        |
++======================+================================================================================================+
+| Grammar/python.gram  | Modify/extend rules for:                                                                       |
+|                      | - **Expression layer**: Add rule ``"(" expression ")"`` at the ``primary`` or equivalent top-of-expression level. |
+|                      | - **Statement layer**: Add rule ``"(" statement ")"`` recursively so **any statement** can be wrapped. |
+|                      | - **Binding statement**: Add rule ``(NAME ":" type_expr "has" expression)`` producing a statement (``AnnAssign``). |
++----------------------+------------------------------------------------------------------------------------------------+
+
+Notes
+-----
+
+* All infix operators, boolean expressions, and comparisons are automatically parenthesizable.
+* No new AST node needed for parentheses wrappers. They are **syntactic sugar**.
+
+AST Builder / PEG Parser Integration
+====================================
+
+Purpose
+-------
+
+* Map the new binding form to CPython’s ``AnnAssign`` AST node
+* Ensure parenthesized statements/expressions **pass through** to the inner AST node
+
+Files
+-----
+
++------------------------+------------------------------------------------------------------------------------------------------+
+| File                   | Purpose                                                                                              |
++========================+======================================================================================================+
+| Parser/pegen/ast.c     | - Implement function to create ``AnnAssign`` from ``(NAME: TYPE has EXPR)``                           |
+|                        | - Ensure parenthesized expressions/statements return the inner AST node without creating a new wrapper |
++------------------------+------------------------------------------------------------------------------------------------------+
+| Parser/pegen/pegen.c   | Mostly automatic; ensure grammar rules call AST builder functions properly                           |
++------------------------+------------------------------------------------------------------------------------------------------+
+
+Notes
+-----
+
+* No new AST node is required for parentheses themselves.
+* ``AnnAssign`` node already exists in CPython.
+* Compiler, symbol table, and runtime handle ``AnnAssign`` natively.
+
+Summary of Impacts on CPython Source Tree
+=========================================
+
++----------------------+------------------------------------------------------------+----------------------------------------------------+
+| Subsystem            | Files                                                      | Purpose                                            |
++======================+============================================================+====================================================+
+| Tokenizer / Keywords | Parser/tokenizer.c, Include/token.h, Lib/token.py, Grammar/Tokens | Add ``has`` keyword                                |
++----------------------+------------------------------------------------------------+----------------------------------------------------+
+| Grammar              | Grammar/python.gram                                        | Add parenthesized expressions, parenthesized statements, ``(NAME: TYPE has EXPR)`` |
++----------------------+------------------------------------------------------------+----------------------------------------------------+
+| AST Builder / Parser | Parser/pegen/ast.c, Parser/pegen/pegen.c                  | Map binding to ``AnnAssign``, unwrap parentheses for expressions/statements |
++----------------------+------------------------------------------------------------+----------------------------------------------------+
+| NOT modified         | Python/compile.c, Python/symtable.c, ceval.c, Objects/*   | CPython runtime and compiler remain unchanged    |
++----------------------+------------------------------------------------------------+----------------------------------------------------+
+
+Notes / Implementation Guidance
+===============================
+
+* **Parentheses around expressions:** Add ``"(" expression ")"`` to the ``primary`` nonterminal.
+* **Parentheses around statements:** Add ``"(" statement ")"`` recursively in the ``statement`` nonterminal.
+* **Binding form:** Add ``(NAME ":" type_expr "has" expression)`` in the ``statement`` group.
+* **AST nodes:** Use existing ``AnnAssign`` for ``(NAME: TYPE has EXPR)``. Parentheses wrappers just pass the inner node.
+* **Boolean/comparison expressions:** Automatically supported via the expression grammar rules.
+
+END TODO
+========
 
 This is Python version 3.15.0 alpha 2
 =====================================
